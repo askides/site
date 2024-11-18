@@ -8,7 +8,7 @@ export function createMetadata(
   description: string,
   opts: MetadataOptions = {}
 ) {
-  const baseUrl = 'https://example.com';
+  const baseUrl = process.env.APP_URL as string;
   const { imageUrl = '/og-image.png', canonicalPath = '/' } = opts;
   const fullImageUrl = `${baseUrl}${imageUrl}`;
   const fullCanonicalUrl = `${baseUrl}${canonicalPath}`;
