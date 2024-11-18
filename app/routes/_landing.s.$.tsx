@@ -25,7 +25,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     throw new Response('Not Found', { status: 404 });
   }
 
-  return createMetadata(data.article.title, data.article.description);
+  return createMetadata(data.article.title, data.article.description, {
+    canonicalPath: `/s/${data.article.slug}`,
+  });
 };
 
 export default function Page() {
