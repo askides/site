@@ -33,8 +33,8 @@ const useSubscribeMutation = () => {
 };
 
 export const meta = createMetadata(
-  'Renato Pozzi',
-  'Nomad, Engineer, maker of things. I love traveling the world and meeting wonderful people who teach me how to live better every day.'
+  'Renato Pozzi | Nomad, Engineer & Polymath',
+  'Travelling the world and meeting wonderful people who teach me how to live better every day.'
 );
 
 export default function Page() {
