@@ -9,9 +9,9 @@ export function createMetadata(
   opts: MetadataOptions = {}
 ) {
   const baseUrl = 'https://askides.com';
-  const { imageUrl = '/og-image.png', canonicalPath = '/' } = opts;
-  const fullImageUrl = `${baseUrl}${imageUrl}`;
+  const { canonicalPath = '/' } = opts;
   const fullCanonicalUrl = `${baseUrl}${canonicalPath}`;
+  const fullImageUrl = `${baseUrl}/image?title=${encodeURIComponent(title)}`;
 
   return [
     { title },
