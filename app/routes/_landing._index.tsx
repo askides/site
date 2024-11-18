@@ -22,9 +22,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
   ];
 
+  const stories = (await getArticlesList()).map((element) => ({
+    ...element,
+    date: new Date(element.date).toLocaleDateString(),
+  }));
+
   return json(
     {
-      stories: await getArticlesList(),
+      stories,
       message,
       links,
     },
@@ -99,6 +104,10 @@ export default function Page() {
               >
                 {element.title}
               </Link>
+              <span className="ml-2 text-sm text-zinc-500">•</span>
+              <span className="ml-2 text-xs text-zinc-500 font-mono">
+                {element.date}
+              </span>
             </li>
           ))}
         </ol>
