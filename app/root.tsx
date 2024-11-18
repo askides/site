@@ -8,6 +8,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import './styles/index.css';
+import 'highlight.js/styles/obsidian.min.css';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </QueryClientProvider>
         <ScrollRestoration />
         <Scripts />
+
+        {/* External Scripts */}
+        <script
+          async
+          src="//gc.zgo.at/count.js"
+          data-goatcounter="https://askides.goatcounter.com/count"
+        />
       </body>
     </html>
   );

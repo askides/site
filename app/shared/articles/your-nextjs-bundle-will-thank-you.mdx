@@ -1,0 +1,410 @@
+---
+title: Your Next.js Bundle Will Thank You
+description: If you are having problems with an extremely huge bundle size for your Next.js application, this article could be a lifesaver for you.
+date: 2022-09-11T00:00:00Z
+---
+
+If you are having problems with an extremely huge bundle size for your Next.js application, this article could be a lifesaver for you.
+
+## Preface
+
+In the last period, I had to get my hands on a project made using Next.js, the request was to improve its performance as for unknown reasons everything seemed to be extremely slow.
+
+Although there were other problems than the bundle optimizations (Missing Image Optimization, Bad Caching Policies) in this article, I will focus exclusively on how to reduce Next.js bundle size.
+
+We will analyze the problems and will discuss how to solve them by talking about barrel files, huge dependencies and how to optimize Next js tree shaking.
+
+## Initial Check
+
+I did some checking, ran a couple of Lighthouse reports, and ended up with an average performance score of **35 points** on both mobile and desktop. Effectively they were not wrong, some problems were there.
+
+After a quick check of the report, I moved on to another type of testing, launching a production build to check the beautiful report that Next.js provides us. The result made me **jump out of my chair**.
+
+To make the point let’s start with something correct, this below is a perfectly acceptable build of a small/medium-sized Next js application. (Actually my [website](https://renatopozzi.me/)).
+
+```bash
+Page                                                          Size     First Load JS
+┌ ● /                                                         4.91 kB        88.2 kB
+├   /_app                                                     0 B            83.3 kB
+├ ○ /404                                                      194 B          83.5 kB
+├ λ /api/auth/[...nextauth]                                   0 B            83.3 kB
+├ λ /api/github                                               0 B            83.3 kB
+├ λ /api/guestbook                                            0 B            83.3 kB
+├ λ /api/newsletter                                           0 B            83.3 kB
+├ λ /api/unsplash                                             0 B            83.3 kB
+├ ● /articles                                                 2.63 kB        85.9 kB
+├ ● /articles/[id] (323 ms)                                   47.2 kB         130 kB
+├   ├ /articles/architecting-react-apps-like-its-2030
+├   ├ /articles/learn-front-end-web-development-from-scratch
+├   ├ /articles/the-reason-why-order-in-react-hooks-matters
+├   └ [+3 more paths]
+├ ● /guestbook (ISR: 10 Seconds) (1186 ms)                    8.71 kB          92 kB
+├   └ css/d1d3e8f0a2ef53b6.css                                372 B
+├ ○ /newsletter                                               3.85 kB        87.1 kB
+└ ○ /testimonials                                             2.76 kB          86 kB
++ First Load JS shared by all                                 83.3 kB
+  ├ chunks/framework-5f4595e5518b5600.js                      42 kB
+  ├ chunks/main-a054bbf31fb90f6a.js                           27.6 kB
+  ├ chunks/pages/_app-7cd69d02271692e8.js                     12.8 kB
+  ├ chunks/webpack-9b312e20a4e32339.js                        836 B
+  └ css/be09086502c4b867.css                                  6.83 kB
+```
+
+As you can see, the First Load JS is under the 100kB so your nice terminal will be displayed with a heartening green color.
+
+In the situation I am telling you about, however, the output was quite different. Just a little bit larger…
+
+## Analyzing Problems
+
+To help you better understand and experiment, I have prepared a demo project containing problems similar to the one I have been working on, so that you will have a practical understanding of how to solve these kinds of problems.
+
+The data and measurements you will see are related to this demo project. You can have a look at all the **[source code](https://github.com/itsrennyman/demo-bundle-analysis)**, it is really small so it will take a short time.
+
+Here’s the output of the production build of the incriminated application:
+
+```bash
+Route (pages)                              Size     First Load JS
+┌ ○ / (454 ms)                             2.54 kB         303 kB
+├   /_app                                  0 B             109 kB
+├ ○ /404                                   186 B           110 kB
+├ λ /api/hello                             0 B             109 kB
+├ ○ /noop (435 ms)                         2.57 kB         303 kB
+├ ○ /signin                                2.54 kB         303 kB
+└ ○ /table (509 ms)                        2.54 kB         303 kB
++ First Load JS shared by all              109 kB
+  ├ chunks/framework-9b5d6ec4444c80fa.js   45.7 kB
+  ├ chunks/main-1ca307e6d442dee1.js        31.7 kB
+  ├ chunks/pages/_app-ced22f7512a5e6d5.js  31 kB
+  └ chunks/webpack-31dae04564131b7d.js     950 B
+```
+
+Quite troubling don’t you think? Personally, it’s a little scary for me to see this stuff. Let us now analyze this output, and pull out some ideas for resurrecting this application.
+
+A couple of quick notes that can help you better understand the overall problems here:
+
+### JS Shared By All Files
+
+As you can see, the bottom section shows a part where it is specified how all the underlying code is inherited by each generated chunk for both APIs and Pages.
+
+What does this mean? Well, for example, the /signin page, has a First Load JS of 303kB but the common part weighs 109kB, meaning that the actual weight of the modules used on that page is 194kB.
+
+### CSS is Not Included in the Calculation
+
+It may be obvious to many, but it is worth pointing out that for those who may be new to this, any CSS you see at the bottom, is not included in the calculation. This is not to say that it is not causing a possible problem, but it is related to another type of issue.
+
+---
+
+So, let’s start with something seemingly obvious, how is it possible that all pages **are the same size**? This is very strange, looking at the sources all the pages have different imports, consequently, they should have different sizes correct? Also interesting is the fact that *\_app* is **relatively small**, so doesn’t affect these huge numbers that much.
+
+One thing we can do is try to analyze our production bundle and see what it says to us, there is a very nice tool we can use to make bundle analysis, called **[Next.js Bundle Analyzer](https://www.npmjs.com/package/@next/bundle-analyzer)** which is a wrapper of the official Webpack bundle analyzer it is very easy to install (so I will skip that part) and it will give you a nice interactive heatmap about the sizes of all your packages.
+
+Here’s the dependencies heatmap for the build, if you downloaded the source code you can do this too using ANALYZE=true npm run build:
+
+![Bundle Analyzer](/assets/c4adb9f3-5e9d-4077-a849-bc9a2eabb51b.jpeg)
+
+If you have never seen such a chart it may seem very complex, actually the concept is very simple, the largest panes are the heaviest, and the content of the panes are source code contained in the corresponding largest pane.
+
+So, have a quick look at the chart, what do you think is the problem Actually, there are two main problems here, let’s dive into them one by one.
+
+**The first problem** can be difficult to discover for someone who usually doesn’t do this kind of stuff, but it will become very obvious soon: there is **one BIG chunk** containing all the dependencies!
+
+Yes, I’m talking about the chunk on the left, you know what? This one will be shared with all the pages that will import **at least one of those dependencies even if the latter is tiny**! Think can be **a useful hint** about why all the pages have the same size!
+
+**The second one** instead, may be easier to discover, this application is using some huge dependencies, the first ones that jump out are:
+
+- @mui/x-data-grid
+- ajv
+- react-phone-input-labelled
+
+One good action we can take after knowing about those dependencies' names, is to have a quick look at our source code, to see where and how much they are used. In our case, you can do it too if you want, but if not, good news, I have already done the work for you, the results are:
+
+- @mui/x-data-grid is used in the random-table.js component, which in turn is used only on the table.js page.
+- The “ajv” package is very similar, it’s used in the auth-form.js component which in turn is used only in the signin.js page.
+- The last one instead is used in PhoneInput, but the latter **is not used** on any of the pages!!!
+
+Now, knowing what causes the problem, looking back for a moment at the output of the build done earlier. WTF is happening here!?
+
+## The Magic Madness of Barrel Files
+
+Just to be clear, what is a Barrel File? Well, do you know when you put all your exports into an index.js file to have easier import paths? This is a Barrel File. (Did you know that the Node.js creator **[has regrets about having created it](https://youtu.be/M3BM9TB-8yA?t=883)**?)
+
+So, I want to experiment, looking at the bundle measurements, we know for sure that ajv is a heavy dependency, so I'm going to open the signin.js page, and I'm going to comment on the AuthForm component.
+
+```jsx
+import { Box } from '@mui/material';
+import { Navbar } from '../components';
+
+export default function Home() {
+  return (
+    <div>
+      <Navbar />
+      <Box padding="32px">{/* <AuthForm /> */}</Box>
+    </div>
+  );
+}
+```
+
+Great, I can’t wait to redo a build and see how much weight I saved! So I relaunch a build and… “Happy Music Stops”, and nothing changed. The signin.js page **is still 303kB**...
+
+In a fit of hysteria, I decided to try everything and so I also comment on the Navbar component, something will happen, won’t it?
+
+```jsx
+import { Box } from '@mui/material';
+
+export default function Home() {
+  return (
+    <div>
+      {/* <Navbar /> */}
+      <Box padding="32px">{/* <AuthForm /> */}</Box>
+    </div>
+  );
+}
+```
+
+And at the next build **something magical happens**:
+
+```bash
+Route (pages)                              Size     First Load JS
+┌ ○ / (418 ms)                             2.05 kB         303 kB
+├   /_app                                  0 B             109 kB
+├ ○ /404                                   186 B           110 kB
+├ λ /api/hello                             0 B             109 kB
+├ ○ /noop (410 ms)                         2.07 kB         303 kB
+├ ○ /signin (382 ms)                       289 B           116 kB
+└ ○ /table                                 2.05 kB         303 kB
++ First Load JS shared by all              109 kB
+  ├ chunks/framework-9b5d6ec4444c80fa.js   45.7 kB
+  ├ chunks/main-1ca307e6d442dee1.js        31.7 kB
+  ├ chunks/pages/_app-ced22f7512a5e6d5.js  31 kB
+  └ chunks/webpack-31dae04564131b7d.js     950 B
+```
+
+Now the pages have lost all their weight! How is this possible? Is it the Navbar component that is causing everything? Try putting everything back as before and only remove the Navbar component this time. Has anything changed?
+
+Let me guess, no right? So we determined that by removing the two components individually the problem remains, but the moment we go to remove both of them magically everything disappears.
+
+Now I want to let you in on a little secret that I kept hidden so that you could reason and understand what was going on, I’ll let you in on it by doing one last test, let’s try changing the imports like this:
+
+```jsx
+import { Box } from '@mui/material';
+import { AuthForm } from '../components/auth-form';
+import { Navbar } from '../components/navbar';
+
+export default function Home() {
+  return (
+    <div>
+      <Navbar />
+      <Box padding="32px">
+        <AuthForm />
+      </Box>
+    </div>
+  );
+}
+```
+
+And let’s launch another build, what happened now?
+
+```bash
+Route (pages)                              Size     First Load JS
+┌ ○ /                                      2.61 kB         305 kB
+├   /_app                                  0 B             109 kB
+├ ○ /404                                   186 B           110 kB
+├ λ /api/hello                             0 B             109 kB
+├ ○ /noop (417 ms)                         2.63 kB         305 kB
+├ ○ /signin (405 ms)                       1.13 kB         188 kB
+└ ○ /table (430 ms)                        2.61 kB         305 kB
++ First Load JS shared by all              109 kB
+  ├ chunks/framework-9b5d6ec4444c80fa.js   45.7 kB
+  ├ chunks/main-1ca307e6d442dee1.js        31.7 kB
+  ├ chunks/pages/_app-ced22f7512a5e6d5.js  31 kB
+  └ chunks/webpack-31dae04564131b7d.js     950 B
+```
+
+It seems that the weight has decreased quite a bit, of course, it is still large because let’s remember that AuthForm is using a heavy dependency, but what is the substantial difference between before and now?
+
+If you notice inside the components folder, there is a seemingly harmless file that has never been mentioned so far the index.js:
+
+```jsx
+export * from './auth-form';
+export * from './button';
+export * from './movie-autocomplete';
+export * from './navbar';
+export * from './phone-input';
+export * from './random-table';
+export * from './side-menu';
+```
+
+Think for a second about what is going on in this file, this file is responsible for exporting all the components within the components folder, to make them usable with a lighter import syntax. I will paste here the differences between the two import versions:
+
+```jsx
+import { Navbar } from '../components'; // Version 1
+import { Navbar } from '../components/navbar'; // Version 2
+```
+
+So yes, we save a subdirectory, but what is the consequence then? It will be enough to import even one tiny module from this index.js to cause a massive import of all other components within the page bundle.
+
+This is why the moment we removed only one of the two components between AuthForm and Navbar the result did not change, as both caused the same massive import effect. Only by removing both of them, a reference with the file index.js was missing and consequently no component was imported!
+
+As a final test before proceeding, let’s replace all those imports on every page and launch another build:
+
+```bash
+Route (pages)                              Size     First Load JS
+┌ ○ /                                      2.01 kB         171 kB
+├   /_app                                  0 B             109 kB
+├ ○ /404                                   186 B           110 kB
+├ λ /api/hello                             0 B             109 kB
+├ ○ /noop (397 ms)                         587 B           128 kB
+├ ○ /signin (314 ms)                       39.1 kB         190 kB
+└ ○ /table                                 83.6 kB         252 kB
++ First Load JS shared by all              109 kB
+  ├ chunks/framework-9b5d6ec4444c80fa.js   45.7 kB
+  ├ chunks/main-1ca307e6d442dee1.js        31.7 kB
+  ├ chunks/pages/_app-ced22f7512a5e6d5.js  31 kB
+  └ chunks/webpack-31dae04564131b7d.js     950 B
+```
+
+Now everything seems more consistent, each page seems to have the correct size considering which modules it is using.
+
+In fact, **it is not surprising** that the table.js page is larger because looking at the heatmap we know that the @mui/x-data-grid is heavy.
+
+## Why is this happening?
+
+So far we have discovered and solved the problem of having all pages with a giant bundle composed of unused dependencies, and we saw that the cause of this was an import from an index.js file, now I would like to explain why this thing causes this problem.
+
+Normally, on a production build, JavaScript code undergoes several operations including removing unused modules, this specific phenomenon is called **Tree Shaking** and in our case, the nextjs tree shaking is made by Webpack.
+
+### What is Webpack Tree Shaking?
+
+And you can imagine it this way: there’s a nice tree in your garden, and that tree is your app source code, and the green and healthy leaves are the modules that your app uses, instead the brown and almost dead leaves are the unused modules.
+
+Now imagine shaking this tree with all your strength **to make the dead leaves fall to the ground and leave only the healthy ones**. This is the Tree Shaking, which in our case as I said before, is usually made by the module bundler like Webpack or Rollup.
+
+The idea in Next.js is that the framework tries to apply the code-splitting by creating page-related chunks, trying to remove all the unused modules for a particular page to make them faster to load and without useless code to evaluate.
+
+There are situations though, where our bundler, (Webpack in this case because it is used by Next.js), cannot remove some modules automatically. This simply happens because Terser (the module Webpack uses for this operation) **cannot always safely determine if a module export is used or not**. As the Webpack documentation says:
+
+> Terser tries to figure it out, but it doesn’t know for sure in many cases. This doesn’t mean that terser is not doing its job well because it can’t figure it out. It’s too difficult to determine it reliably in a dynamic language like JavaScript.
+
+Does this mean that barrel files can no longer be used? **Probably Not**.
+
+## So Why the Next.js Tree Shaking is Not Working?
+
+I am already hearing your voices bombarding my head with phrases like:
+
+> Yes, all are very nice, but isn’t there a way to have the same result by keeping index.js?
+
+There is, (most of the time) an alternative solution for you.
+
+As you just read, Terser is doing a nice job, but sometimes it’s not perfect. To make it work better, we can give Webpack a nice hint called "sideEffects". This value can be put into a package.json and accepts RegEx, Strings, and Boolean as values. **But what exactly a side effect is**?
+
+Well, official documentation can help us:
+
+> A “side effect” is defined as code that performs a special behavior when imported, other than exposing one or more exports. An example of this is polyfills, which affect the global scope and usually do not provide an export.
+
+For example in our case we don’t use any side effects, so we can set them directly false, helping Webpack prune the unused modules:
+
+```json
+{
+  "sideEffects": false
+}
+```
+
+Now, if we try to create a production build keeping our old imports from the barrel (index.js) file, see what happens:
+
+```bash
+Route (pages)                              Size     First Load JS
+┌ ○ / (338 ms)                             2 kB            171 kB
+├   /_app                                  0 B             109 kB
+├ ○ /404                                   186 B           110 kB
+├ λ /api/hello                             0 B             109 kB
+├ ○ /noop (336 ms)                         587 B           128 kB
+├ ○ /signin (397 ms)                       39.1 kB         190 kB
+└ ○ /table                                 83.6 kB         252 kB
++ First Load JS shared by all              109 kB
+  ├ chunks/framework-9b5d6ec4444c80fa.js   45.7 kB
+  ├ chunks/main-1ca307e6d442dee1.js        31.7 kB
+  ├ chunks/pages/_app-ced22f7512a5e6d5.js  31 kB
+  └ chunks/webpack-31dae04564131b7d.js     950 B
+```
+
+We have the same result when we replaced all the imports from the barrel file with the single one! You can also have a look at the new heatmap to immediately discover differences.
+
+![Bundle Analyzer](/assets/fe1d1166-6e46-4d38-9d86-5ba1fb660e42.jpeg)
+
+Look how now there are different chunks (of different sizes) and we have no more big huge chunks shared by all the pages!
+
+### A Smart Question
+
+Do you remember when we removed the AuthForm and the Navbar component from the signin.js page? We initially solved the problem, but am I mistaken, or was there still an imported dependency present?
+
+```jsx
+import { Box } from '@mui/material';
+```
+
+Why did this dependency not continue to cause the problem of the other two? Yet here again a **[barrel file](https://github.com/mui/material-ui/blob/master/packages/mui-material/src/index.js#L51)** is used to export all the components, and well, the answer again can be **[found here](https://github.com/mui/material-ui/blob/master/packages/mui-material/package.json#L76)**. And if you are wondering, **[ChakraUI](https://github.com/chakra-ui/chakra-ui/blob/main/packages/components/accordion/package.json#L27)** is using the same on all the components, and **[MantineUI](https://github.com/mantinedev/mantine/blob/master/src/mantine-core/package.json#L10)** is using it too, even **[Lodash](https://github.com/lodash/lodash/blob/master/package.json#L10)** (in the ESM version) takes advantage of this technique.
+
+## Common Tips to Enhance Tree Shaking
+
+I think there are many tips we can apply, I will write here some of mine I use a lot nowadays.
+
+### Use Tree Shakeable Library
+
+Again, it can be a cliché but is very common to see projects with tons of non-tree-shakeable dependencies, how can you know if one of them is tree-shakeable or not? Using tools like **[BundlePhobia](https://bundlephobia.com/)**.
+
+### Avoid Transpiling to CommonJS
+
+You should configure your bundler to leave intact all your ESM instead of transpiling it into CJS, otherwise, the tree-shaking will be much more difficult to be applied from the bundler. You can make this for example with Babel using this piece of code:
+
+```jsx
+export default {
+  presets: [
+    [
+      '@babel/preset-env',
+      {
+        modules: false,
+      },
+    ],
+  ],
+};
+```
+
+### Avoid Star Imports
+
+You should import only the modules you need, avoid importing \* from a module, otherwise, everything will be included in your code chunk, even if it’s unused!
+
+## Dealing with Huge Dependencies
+
+So, one problem is solved, but we have another one. Let’s think about of to deal with those huge dependencies, picking one of those, I usually start asking myself some questions:
+
+- Is this library required or can it be replaced with something else?
+- In case we need these functionalities is there any more lightweight alternative that does the same thing? (Think about lodash and lodash-es)
+
+Let’s pick one by one those dependencies and look if we can do some replacement, starting from the biggest the **@mui/x-data-grid**.
+
+> A quick reminder, as I said before the project is an example, it is not something real, it is for didactic purposes. Take these considerations based on your requirements!
+
+So, looking at the code we are displaying a Table, without any particular needings, it’s just a user list. We don’t care about any of the complex features that this grid offers to us.
+
+In case of the needings for sorting or searching, we can use a more lightweight solution like **[react-table](https://tanstack.com/table/v8)** which is way light.
+
+Let’s keep going talking about **ajv**, even in this case, the requirement here is to validate a simple form, so simple that we could even do it by hand. In this case, there is not much to say, if there are no impediments, it is good to opt for a different solution from this one.
+
+This is accentuated by the fact that this library **[is not tree-shakeable](https://bundlephobia.com/package/ajv@8.11.0)**. One different library for this particular case? **[Superstruct](https://bundlephobia.com/package/superstruct@0.16.0)** may be cool (and more lightweight).
+
+The last one is the easiest, the actual not used **react-phone-input-labelled**. That can be easily deleted since its only task is to fatten the bundle, but why did I want to include it?
+
+Simply because **very often** if the codebase is not constantly maintained it can happen that between the various changes of hands and changes of requirements **something gets left in the source code without even being used**.
+
+Consequently, therefore, it is good to do a dependency check sometimes, and then see if something can be removed, to save bytes and build time.
+
+## Last but not least!
+
+It’s been a long journey but I hope you’ve all come through unscathed, if there are any questions or you just want to stop by and say hello you can find me on **[Twitter](https://twitter.com/imarenny)**, or **[LinkedIn](https://www.linkedin.com/in/itsrennyman/)**.
+
+Also, stop by and sign my **[Guestbook](https://renatopozzi.me/guestbook)** letting me know what you think of this article!
+
+I’ll leave some links below that may help you!
+
+- **[Tree Shaking Docs (Webpack)](https://webpack.js.org/guides/tree-shaking/)**
+- **[BundlePhobia](https://bundlephobia.com/)**
+- **[Import Cost](https://marketplace.visualstudio.com/items?itemName=wix.vscode-import-cost)** for VSCode

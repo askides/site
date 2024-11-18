@@ -38,7 +38,7 @@ export default function Page() {
           &larr; Back to articles
         </a>
       </div>
-      <article className="prose prose-headings:text-base prose-h1:text-lg prose-headings:font-semibold">
+      <article className="prose prose-headings:text-base prose-h1:text-lg prose-headings:font-semibold prose-pre:p-0 scrollbar-thin">
         <h1>{article.title}</h1>
 
         <div

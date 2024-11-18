@@ -1,0 +1,136 @@
+---
+title: Create React Components With Tailwind Like A Pro
+description: Master the art of creating reusable Tailwind components in React. Learn how clsx, tailwind-merge, and class-variation-authority can simplify your coding journey.
+date: 2023-07-07T00:00:00Z
+---
+
+One of the key advantages of modern front-end frameworks, such as [React.js](https://react.dev/), is their emphasis on **reusability** and **composability** of components. The component-based architecture allows developers to build highly maintainable and scalable applications. However, when it comes to leveraging utility-first CSS frameworks like [Tailwind CSS](https://tailwindcss.com/), things can get a bit **tricky**.
+
+## Complexities of TailwindCSS
+
+While Tailwind CSS offers a **fantastic** utility-first approach to styling, it **falls** short in terms of composability when building **reusable components**, and this is for a bunch of reasons:
+
+- No built-in mechanism exists to check for **class conflicts** during assignments. This can lead to unanticipated outcomes and cumbersome debugging when classes with contradictory styles are applied to the same element.
+- Merging **conditional classes** can also be problematic, as conditional rendering often necessitates additional logic and can lead to verbose and hard-to-maintain code.
+- Lastly, creating variants of the same component can turn out to be messy. Managing a large number of utility classes for different **states or variations** of a component can quickly become a daunting task, especially in larger projects where consistency and scalability are crucial.
+
+## 3 Packages Will Save You
+
+Your presence here today suggests that you're **seeking a resolution** for one or more of these challenges. **Rest assured**, the solution lies within three powerful open-source libraries, which collectively have the potential to **drastically simplify** your development process, let me introduce them:
+
+- _clsx_: A tiny (less than 1KB) utility for constructing classNames in JavaScript. It allows for more dynamic and conditional className creation, which aids in crafting more interactive and responsive UI components.
+- _tailwind-merge_: An incredibly useful utility for merging Tailwind CSS classes. This comes in handy when we need to conditionally apply or combine different Tailwind utility classes.
+- _class-variance-authority_: A library that assists in managing class variations in components. It’s excellent for establishing consistent styles throughout a project.
+
+## Let’s Handle The First Two
+
+To kick things off, it's **essential** to have an effective and reusable solution for merging classes, with the additional flexibility to extend them as **necessary**. Achieving this can be as straightforward as implementing a function similar to the one below:
+
+```tsx
+import { ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+```
+
+The function `cn` is a helper utility that makes it easier to handle className **manipulation** in a React + Tailwind environment, ensuring that classNames are **appropriately merged** and any conflicts are **resolved**, making the component styling more consistent and maintainable.
+
+## A Practical Example
+
+Now, let's jump into some practical examples. We'll begin by creating a simple Card Component, you can find a very similar version on my open-source [React Component Library](https://github.com/askides/ui).
+
+```tsx
+import * as React from 'react';
+
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        className={cn('bg-white border border-zinc-150 w-full', className)}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+```
+
+This piece of code defines a `Card` component in React using TypeScript. The props are destructured to separate `className` from the rest of the props. If a `className` is provided when the `Card` component is used, it **will be merged** with the default className using the `cn` function you previously created.
+
+Try to guess the result of this className to see if you got the point!
+
+```tsx
+export function Page() {
+  return <Card className="custom-class another-one" />;
+}
+```
+
+## Adding Variants To Components
+
+Now, to add variants to our components, we need to leverage the last package: `class-variance-authority`. This library is ideal for scenarios where a component may have multiple visual representations, such as a button being in a primary or secondary variant.
+
+In the next example we will add a `primary` and `secondary` variant to the `Card` component, changing the background and the border colors.
+
+```tsx
+import { VariantProps, cva } from "class-variance-authority";
+
+const variants = cva(
+  "border w-full",
+  {
+    variants: {
+      kind: {
+        primary: "bg-white border-zinc-150",
+        secondary: "bg-black border-zinc-100",
+      },
+    },
+    defaultVariants: {
+      kind: "primary",
+    },
+  }
+);
+
+export interface CardProps
+	extends React.HTMLAttributes<HTMLDivElement>,
+		VariantProps<typeof variants> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, kind, ...props }, ref) => {
+    return (
+      <div
+        className={cn(variants({ kind, className })}
+        ref={ref}
+        {...props}
+      />
+    );
+  }
+);
+```
+
+Now, our `Card` component accepts a new prop, `kind`, which is used to apply different class variations based on its value. The `class-variance-authority` helps us handle this new property and generate the right class names based on its value. We defined two variants, `primary` and `secondary`, each with its own unique class names for different styles.
+
+As a result, you can now use the `Card` component in different contexts, while maintaining a consistent structure and look. Here's how you might utilize the variants:
+
+```tsx
+export function Page() {
+  return (
+    <>
+      <Card kind="primary" className="additional-classes" />
+      <Card kind="secondary" className="more-custom-classes" />
+    </>
+  );
+}
+```
+
+Each `Card` will have its own unique appearance, according to the specified variant.
+
+## Conclusion
+
+Mastering the art of component styling in React when using utility-first CSS libraries such as Tailwind can be a bit daunting at first, especially when considering the component reusability and maintainability.
+
+But with the right set of tools and understanding of best practices, you can avoid the common pitfalls and build applications that are not only visually appealing but also easy to maintain and scale. With `clsx`, `tailwind-merge`, and `class-variance-authority`, you're now equipped to build Tailwind components using React like a pro!
+
+Keep practicing and building. Happy coding!

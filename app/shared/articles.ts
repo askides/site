@@ -1,7 +1,9 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import path from 'node:path';
 import matter from 'front-matter';
+import { markedHighlight } from 'marked-highlight';
+import hljs from 'highlight.js';
 
 interface ArticleAttributes {
   title: string;
@@ -18,6 +20,17 @@ interface Article extends ArticlePreview {
 }
 
 const ARTICLES_PATH = path.join(process.cwd(), './app/shared/articles');
+
+const marked = new Marked(
+  markedHighlight({
+    emptyLangClass: 'hljs',
+    langPrefix: 'hljs language-',
+    highlight(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+  })
+);
 
 async function getAllMarkdownFiles(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -76,7 +89,7 @@ export async function getArticle(slug: string): Promise<Article | null> {
       body: string;
     };
 
-    const html = await marked(body);
+    const html = await marked.parse(body);
 
     return {
       slug,
