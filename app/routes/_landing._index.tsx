@@ -11,10 +11,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.retrieve(request);
   const message = session.get('message');
 
+  const links = [
+    {
+      title: 'Coding on GitHub',
+      url: 'https://github.com/askides',
+    },
+    {
+      title: 'Posting on Bluesky',
+      url: 'https://bsky.app/profile/askides.bsky.social',
+    },
+  ];
+
   return json(
     {
       stories: await getArticlesList(),
       message,
+      links,
     },
     {
       headers: {
@@ -38,7 +50,7 @@ export const meta = createMetadata(
 );
 
 export default function Page() {
-  const { stories, message } = useLoaderData<typeof loader>();
+  const { stories, message, links } = useLoaderData<typeof loader>();
   const subscribe = useSubscribeMutation();
   const email = useRef<HTMLInputElement>(null);
 
@@ -83,6 +95,25 @@ export default function Page() {
             <li key={element.slug} className="text-zinc-900">
               <Link
                 to={`/s/${element.slug}`}
+                className="ml-2 text-indigo-500 hover:underline transition-colors"
+              >
+                {element.title}
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="mb-16">
+        <h2 className="font-semibold mb-4 text-zinc-900">Where I've been</h2>
+
+        <ol className="list-decimal list-inside space-y-2">
+          {links.map((element) => (
+            <li key={element.url} className="text-zinc-900">
+              <Link
+                to={element.url}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="ml-2 text-indigo-500 hover:underline transition-colors"
               >
                 {element.title}
