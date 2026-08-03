@@ -38,7 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   // Subscribe the user in the audience. (Will be unsubscribed by default)
-  const response = await mailer.contacts.create({
+  const response = await mailer().contacts.create({
     email: data.email,
     unsubscribed: true,
     audienceId: RESEND_AUDIENCE_ID,
@@ -49,7 +49,7 @@ export async function action({ request }: ActionFunctionArgs) {
     href: `${APP_URL}/api/subscribe?id=${response.data?.id}`,
   });
 
-  await mailer.emails.send({
+  await mailer().emails.send({
     from: RESEND_FROM_EMAIL,
     to: data.email,
     subject: '[Action Required] Confirm Your Email!',
@@ -68,7 +68,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   // Confirm the user in the audience.
-  await mailer.contacts.update({
+  await mailer().contacts.update({
     audienceId: RESEND_AUDIENCE_ID,
     id,
     unsubscribed: false,
