@@ -86,6 +86,12 @@ function ExternalLink({
   );
 }
 
+// Ties single-letter words to the word after them, so a line never ends on a
+// stray "A" or "I". text-wrap: pretty only guards the last line.
+function typeset(text: string) {
+  return text.replace(/(^|\s)(\w)\s+/g, '$1$2 ');
+}
+
 // Separator is its own element so the dot keeps even spacing on both sides.
 function Meta({ parts }: { parts: string[] }) {
   return (
@@ -148,7 +154,7 @@ export default function Page() {
         <h1 className="text-[2.25rem] sm:text-[3rem] font-semibold tracking-[-0.025em] leading-none">
           Renato Pozzi
         </h1>
-        <p className="mt-8 text-[17px] leading-relaxed max-w-[46ch]">
+        <p className="mt-8 text-pretty text-[17px] leading-relaxed max-w-[46ch]">
           Ten years building web products, mostly on the front end. Currently at{' '}
           <ExternalLink href="https://toggl.com">Toggl</ExternalLink>, working
           remote, and building{' '}
@@ -192,6 +198,12 @@ export default function Page() {
                   {element.role}
                 </p>
                 <Meta parts={element.meta} />
+
+                {element.summary && (
+                  <p className="mt-3 max-w-[46ch] text-pretty text-[13px] leading-relaxed text-ink/70">
+                    {typeset(element.summary)}
+                  </p>
+                )}
               </Row>
             ))}
           </div>
@@ -213,8 +225,8 @@ export default function Page() {
                     {element.name}
                   </p>
                 )}
-                <p className="mt-1 text-[14px] text-muted max-w-[46ch]">
-                  {element.summary}
+                <p className="mt-1 text-pretty text-[13px] leading-relaxed text-muted max-w-[46ch]">
+                  {typeset(element.summary)}
                 </p>
               </Row>
             ))}

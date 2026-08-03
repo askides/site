@@ -68,6 +68,7 @@ function registerFonts() {
 
 const INK = '#14161A';
 const MUTED = '#6B7078';
+const BODY = '#3B3F45';
 const RULE = '#E4E4E2';
 
 // Mirrors the page: a mono key column with everything hanging off it.
@@ -121,6 +122,13 @@ const styles = StyleSheet.create({
     maxWidth: 270,
   },
   link: { color: INK, textDecoration: 'underline' },
+  roleSummary: {
+    fontSize: 8.5,
+    color: BODY,
+    lineHeight: 1.45,
+    marginTop: 4,
+    maxWidth: 300,
+  },
   linkRow: { flexDirection: 'row', alignItems: 'center' },
   arrow: { marginLeft: 3, marginBottom: 1 },
 });
@@ -185,6 +193,9 @@ function Resume() {
             <Row key={element.period} label={element.period}>
               <Text style={styles.title}>{element.role}</Text>
               <Text style={styles.meta}>{element.meta.join('  ·  ')}</Text>
+              {element.summary && (
+                <Text style={styles.roleSummary}>{element.summary}</Text>
+              )}
             </Row>
           ))}
         </View>

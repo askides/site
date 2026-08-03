@@ -9,11 +9,20 @@ export const profile = {
     "Ten years building web products, mostly on the front end. Currently at Toggl, working remote, and building Zilfu on the side. I'm curious about most things.",
 };
 
-export const work = [
+type Role = {
+  period: string;
+  role: string;
+  meta: string[];
+  summary?: string;
+};
+
+export const work: Role[] = [
   {
     period: '2024 – Present',
     role: 'Senior Frontend Engineer',
     meta: ['Toggl', 'Remote'],
+    summary:
+      "Rewrote the data layer of Toggl Track's browser extension for 398k weekly users, and shipped it ~15k lines lighter across 969 files. A service architecture with incremental sync replaced ad-hoc API calls and full-list refetches; Chrome and Firefox now build from one Manifest V3 codebase.",
   },
   {
     period: '2022 – 2024',
