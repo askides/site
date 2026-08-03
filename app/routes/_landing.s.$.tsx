@@ -1,8 +1,9 @@
 import { json } from '@remix-run/node';
+import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { getArticle } from '~/shared/articles';
-import type { LoaderFunctionArgs, MetaFunction } from '@remix-run/node';
 import { createMetadata } from '~/shared/meta';
+import { ThemeToggle } from '~/shared/theme';
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const slug = params['*'];
@@ -35,12 +36,16 @@ export default function Page() {
 
   return (
     <>
-      <div className="mb-4">
-        <a href="/" className="text-blue-600 hover:underline">
-          &larr; Back to articles
+      <div className="mb-10 flex items-center justify-between gap-6">
+        <a
+          href="/"
+          className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted hover:text-ink transition-colors"
+        >
+          &larr; Back
         </a>
+        <ThemeToggle />
       </div>
-      <article className="prose prose-headings:text-base prose-h1:text-lg prose-headings:font-semibold prose-pre:p-0 scrollbar-thin">
+      <article className="prose dark:prose-invert prose-headings:text-base prose-h1:text-lg prose-headings:font-semibold prose-pre:p-0 scrollbar-thin">
         <h1>{article.title}</h1>
 
         <div

@@ -3,6 +3,60 @@
 @tailwind utilities;
 
 @layer base {
+  /* Page palette. Space-separated channels so Tailwind opacity modifiers
+     (text-muted/50) keep working.
+
+     Three states, resolved in CSS alone so the server-rendered markup is
+     already correct: no stored choice follows the OS, and [data-theme] on
+     <html> overrides it. */
+  :root {
+    color-scheme: light;
+
+    --paper: 251 251 250;
+    --ink: 20 22 26;
+    --muted: 107 112 120;
+    --rule: 228 228 226;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      color-scheme: dark;
+
+      --paper: 18 19 22;
+      --ink: 237 237 235;
+      --muted: 139 144 153;
+      --rule: 42 44 48;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+
+    --paper: 18 19 22;
+    --ink: 237 237 235;
+    --muted: 139 144 153;
+    --rule: 42 44 48;
+  }
+
+  /* Only fades during the switch itself, so hover and focus stay instant. */
+  :root[data-theme-switching] *,
+  :root[data-theme-switching] *::before,
+  :root[data-theme-switching] *::after {
+    transition:
+      background-color 180ms ease,
+      border-color 180ms ease,
+      color 180ms ease,
+      text-decoration-color 180ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root[data-theme-switching] *,
+    :root[data-theme-switching] *::before,
+    :root[data-theme-switching] *::after {
+      transition: none;
+    }
+  }
+
   :root {
     --radius: 8px;
     --sidebar-background: 0 0% 98%;

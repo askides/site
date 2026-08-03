@@ -1,4 +1,4 @@
-import { json, type LoaderFunctionArgs } from '@remix-run/node';
+import { type LoaderFunctionArgs, json } from '@remix-run/node';
 import { Link, useLoaderData } from '@remix-run/react';
 import { useMutation } from '@tanstack/react-query';
 import { ofetch } from 'ofetch';
@@ -6,38 +6,63 @@ import { useRef } from 'react';
 import { getArticlesList } from '~/shared/articles';
 import { createMetadata } from '~/shared/meta';
 import { auth } from '~/shared/session';
+import { ThemeToggle } from '~/shared/theme';
+
+const work = [
+  {
+    period: '2024 – Present',
+    role: 'Senior Frontend Engineer',
+    meta: ['Toggl', 'Remote'],
+  },
+  {
+    period: '2022 – 2024',
+    role: 'Frontend Engineer',
+    meta: ['Kaaja', 'Milan', 'Hybrid'],
+  },
+  {
+    period: '2019 – 2021',
+    role: 'Technical Lead',
+    meta: ['Bluecube', 'Milan', 'On-site'],
+  },
+  {
+    period: '2015 – 2019',
+    role: 'Fullstack Engineer',
+    meta: ['Bluecube', 'Milan', 'On-site'],
+  },
+];
+
+// Keyed by what it is, not by a date: these are side projects, not positions.
+const building = [
+  {
+    label: 'SaaS',
+    name: 'Zilfu',
+    url: 'https://zilfu.app',
+    summary:
+      "The social media scheduler for everyone tired of paying more to grow. I'm building it on my own, from design to deploy.",
+  },
+];
+
+const elsewhere = [
+  { label: 'GitHub', handle: 'askides', url: 'https://github.com/askides' },
+  {
+    label: 'LinkedIn',
+    handle: 'in/askides',
+    url: 'https://www.linkedin.com/in/askides/',
+  },
+];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.retrieve(request);
   const message = session.get('message');
 
-  const links = [
-    {
-      title: 'Coding on GitHub',
-      url: 'https://github.com/askides',
-    },
-    {
-      title: 'Posting on Bluesky',
-      url: 'https://bsky.app/profile/askides.bsky.social',
-    },
-  ];
-
   const stories = (await getArticlesList()).map((element) => ({
     ...element,
-    date: new Date(element.date).toLocaleDateString(),
+    year: String(new Date(element.date).getFullYear()),
   }));
 
   return json(
-    {
-      stories,
-      message,
-      links,
-    },
-    {
-      headers: {
-        'Set-Cookie': await auth.commit(session),
-      },
-    }
+    { stories, message },
+    { headers: { 'Set-Cookie': await auth.commit(session) } },
   );
 }
 
@@ -51,11 +76,94 @@ const useSubscribeMutation = () => {
 
 export const meta = createMetadata(
   'Renato Pozzi | Nomad, Software Engineer & Polymath',
-  "Travelling the world and meeting wonderful people who teach me how to live better every day. I'm 100% curious about everything."
+  "Travelling the world and meeting wonderful people who teach me how to live better every day. I'm 100% curious about everything.",
 );
 
+const link =
+  'underline decoration-1 underline-offset-4 decoration-ink/25 hover:decoration-ink transition-colors';
+
+function Section({
+  title,
+  children,
+}: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-rule pt-8">
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted mb-6">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+// Marks links that leave the site. Drawn rather than typed, so its weight
+// tracks the surrounding text instead of depending on a font's arrow glyph.
+function ExternalLink({
+  href,
+  className = '',
+  children,
+}: { href: string; className?: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${className} ${link}`}
+    >
+      {children}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 10 10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="inline h-[0.6em] w-[0.6em] ml-[0.28em] align-baseline"
+      >
+        <path d="M2.4 7.6 7.6 2.4" />
+        <path d="M3.6 2.4h4v4" />
+      </svg>
+    </a>
+  );
+}
+
+// Separator is its own element so the dot keeps even spacing on both sides.
+function Meta({ parts }: { parts: string[] }) {
+  return (
+    <p className="mt-1 text-[14px] text-muted">
+      {parts.map((part, index) => (
+        <span key={part}>
+          {index > 0 && (
+            <span aria-hidden="true" className="mx-2 text-muted/50">
+              •
+            </span>
+          )}
+          {part}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+// The gutter is a key column, not strictly a date column: it also carries
+// "GitHub", "Side project", and the like. Everything hangs off it.
+function Row({
+  label,
+  children,
+}: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid gap-x-8 sm:grid-cols-[7.5rem_1fr]">
+      <div className="font-mono text-xs tabular-nums text-muted sm:pt-[3px]">
+        {label}
+      </div>
+      <div className="mt-1 sm:mt-0">{children}</div>
+    </div>
+  );
+}
+
 export default function Page() {
-  const { stories, message, links } = useLoaderData<typeof loader>();
+  const { stories, message } = useLoaderData<typeof loader>();
   const subscribe = useSubscribeMutation();
   const email = useRef<HTMLInputElement>(null);
 
@@ -67,97 +175,142 @@ export default function Page() {
       return false;
     }
 
-    subscribe.mutate(email.current.value, {
-      onSuccess: () => {
-        alert('Done! Now check your inbox.');
-      },
-    });
+    subscribe.mutate(email.current.value);
   };
 
   return (
     <>
       {message && (
-        <div className="mb-16 p-4 bg-green-200 border border-green-300 text-green-700">
+        <p className="mb-16 font-mono text-xs text-ink border-l-2 border-ink pl-3 py-1">
           {message}
-        </div>
+        </p>
       )}
 
       <header className="mb-16">
-        <h1 className="font-semibold mb-4 text-lg text-zinc-900">
-          Renato Pozzi
-        </h1>
-        <p className="text-zinc-900 leading-relaxed">
-          Nomad, Engineer, maker of things. I love traveling the world and
-          meeting wonderful people who teach me how to live better every day.
+        <div className="flex items-center justify-between gap-6">
+          <h1 className="text-[2.25rem] sm:text-[3rem] font-semibold tracking-[-0.025em] leading-none">
+            Renato Pozzi
+          </h1>
+          <ThemeToggle />
+        </div>
+        <p className="mt-8 text-[17px] leading-relaxed max-w-[46ch]">
+          Ten years building web products, mostly on the front end. Currently at{' '}
+          <ExternalLink href="https://toggl.com">Toggl</ExternalLink>, working
+          remote, and building{' '}
+          <ExternalLink href="https://zilfu.app">Zilfu</ExternalLink> on the
+          side. I'm curious about most things.
         </p>
       </header>
 
-      <section className="mb-16">
-        <h2 className="font-semibold mb-4 text-zinc-900">Stories</h2>
+      <div className="space-y-14">
+        <Section title="Work">
+          <div className="space-y-6">
+            {work.map((element) => (
+              <Row key={element.period} label={element.period}>
+                <p className="text-base font-medium leading-snug">
+                  {element.role}
+                </p>
+                <Meta parts={element.meta} />
+              </Row>
+            ))}
+          </div>
+        </Section>
 
-        <ol className="list-decimal list-inside space-y-2">
-          {stories.map((element) => (
-            <li key={element.slug} className="text-zinc-900">
-              <Link
-                to={`/s/${element.slug}`}
-                className="ml-2 text-indigo-500 hover:underline transition-colors"
-              >
-                {element.title}
-              </Link>
-              <span className="ml-2 text-sm text-zinc-500">•</span>
-              <span className="ml-2 text-xs text-zinc-500 font-mono">
-                {element.date}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
+        <Section title="Building">
+          <div className="space-y-6">
+            {building.map((element) => (
+              <Row key={element.name} label={element.label}>
+                {element.url ? (
+                  <ExternalLink
+                    href={element.url}
+                    className="text-base font-medium leading-snug"
+                  >
+                    {element.name}
+                  </ExternalLink>
+                ) : (
+                  <p className="text-base font-medium leading-snug">
+                    {element.name}
+                  </p>
+                )}
+                <p className="mt-1 text-[14px] text-muted max-w-[46ch]">
+                  {element.summary}
+                </p>
+              </Row>
+            ))}
+          </div>
+        </Section>
 
-      <section className="mb-16">
-        <h2 className="font-semibold mb-4 text-zinc-900">Where I've been</h2>
+        <Section title="Writing">
+          <div className="space-y-5">
+            {stories.map((element) => (
+              <Row key={element.slug} label={element.year}>
+                <Link
+                  to={`/s/${element.slug}`}
+                  className={`text-base leading-snug ${link}`}
+                >
+                  {element.title}
+                </Link>
+              </Row>
+            ))}
+          </div>
+        </Section>
 
-        <ol className="list-decimal list-inside space-y-2">
-          {links.map((element) => (
-            <li key={element.url} className="text-zinc-900">
-              <Link
-                to={element.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-2 text-indigo-500 hover:underline transition-colors"
-              >
-                {element.title}
-              </Link>
-            </li>
-          ))}
-        </ol>
-      </section>
+        <Section title="Elsewhere">
+          <div className="space-y-5">
+            {elsewhere.map((element) => (
+              <Row key={element.url} label={element.label}>
+                <ExternalLink
+                  href={element.url}
+                  className="text-base leading-snug"
+                >
+                  {element.handle}
+                </ExternalLink>
+              </Row>
+            ))}
+          </div>
+        </Section>
 
-      <section>
-        <div className="max-w-xl">
-          <h2 className="font-semibold mb-4">Stay in the Loop</h2>
-          <p className="text-zinc-900 mb-8 leading-relaxed">
-            I'll send you an email when I have some news. No fuss, no spam. I
-            write about once or twice a month. Unsubscribe at any time.
-          </p>
-          <form className="flex gap-3" onSubmit={onSubmit}>
-            <input
-              type="email"
-              name="email"
-              placeholder="steve.wozniak@gmail.com"
-              className="flex-1 px-4 py-3 rounded-lg border-0 ring-1 ring-zinc-200 text-sm placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-              required
-              ref={email}
-            />
-            <button
-              type="submit"
-              disabled={subscribe.isPending}
-              className="bg-zinc-900 text-white rounded-lg px-6 py-3 text-sm font-medium hover:bg-zinc-800 transition-all duration-200 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+        <Section title="Newsletter">
+          <div>
+            {/* Prose keeps a readable measure; the field spans the full column
+                so its rule lines up with the section rules. */}
+            <p className="text-[17px] leading-relaxed max-w-[46ch]">
+              I send an email when I have something worth sending, once or twice
+              a month. Unsubscribe any time.
+            </p>
+
+            <form
+              className="mt-6 flex items-center gap-4 border-b border-ink/20 pb-2 focus-within:border-ink transition-colors"
+              onSubmit={onSubmit}
             >
-              {subscribe.isPending ? 'Subscribing...' : 'Subscribe'}
-            </button>
-          </form>
-        </div>
-      </section>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                className="flex-1 bg-transparent text-[17px] placeholder:text-muted/60 focus:outline-none"
+                required
+                ref={email}
+              />
+              <button
+                type="submit"
+                disabled={subscribe.isPending}
+                className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted hover:text-ink focus-visible:text-ink focus-visible:outline-none focus-visible:underline underline-offset-4 transition-colors disabled:opacity-40"
+              >
+                {subscribe.isPending ? 'Sending' : 'Subscribe'}
+              </button>
+            </form>
+
+            <output className="block mt-3 font-mono text-[11px] text-muted h-4">
+              {subscribe.isSuccess && 'Check your inbox to confirm.'}
+              {subscribe.isError && 'That did not go through. Try again.'}
+            </output>
+          </div>
+        </Section>
+      </div>
     </>
   );
 }
