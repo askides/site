@@ -5,51 +5,9 @@ import { ofetch } from 'ofetch';
 import { useRef } from 'react';
 import { getArticlesList } from '~/shared/articles';
 import { createMetadata } from '~/shared/meta';
+import { building, elsewhere, work } from '~/shared/resume';
 import { auth } from '~/shared/session';
 import { ThemeToggle } from '~/shared/theme';
-
-const work = [
-  {
-    period: '2024 – Present',
-    role: 'Senior Frontend Engineer',
-    meta: ['Toggl', 'Remote'],
-  },
-  {
-    period: '2022 – 2024',
-    role: 'Frontend Engineer',
-    meta: ['Kaaja', 'Milan', 'Hybrid'],
-  },
-  {
-    period: '2019 – 2021',
-    role: 'Technical Lead',
-    meta: ['Bluecube', 'Milan', 'On-site'],
-  },
-  {
-    period: '2015 – 2019',
-    role: 'Fullstack Engineer',
-    meta: ['Bluecube', 'Milan', 'On-site'],
-  },
-];
-
-// Keyed by what it is, not by a date: these are side projects, not positions.
-const building = [
-  {
-    label: 'SaaS',
-    name: 'Zilfu',
-    url: 'https://zilfu.app',
-    summary:
-      "The social media scheduler for everyone tired of paying more to grow. I'm building it on my own, from design to deploy.",
-  },
-];
-
-const elsewhere = [
-  { label: 'GitHub', handle: 'askides', url: 'https://github.com/askides' },
-  {
-    label: 'LinkedIn',
-    handle: 'in/askides',
-    url: 'https://www.linkedin.com/in/askides/',
-  },
-];
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const session = await auth.retrieve(request);
@@ -187,12 +145,9 @@ export default function Page() {
       )}
 
       <header className="mb-16">
-        <div className="flex items-center justify-between gap-6">
-          <h1 className="text-[2.25rem] sm:text-[3rem] font-semibold tracking-[-0.025em] leading-none">
-            Renato Pozzi
-          </h1>
-          <ThemeToggle />
-        </div>
+        <h1 className="text-[2.25rem] sm:text-[3rem] font-semibold tracking-[-0.025em] leading-none">
+          Renato Pozzi
+        </h1>
         <p className="mt-8 text-[17px] leading-relaxed max-w-[46ch]">
           Ten years building web products, mostly on the front end. Currently at{' '}
           <ExternalLink href="https://toggl.com">Toggl</ExternalLink>, working
@@ -200,6 +155,32 @@ export default function Page() {
           <ExternalLink href="https://zilfu.app">Zilfu</ExternalLink> on the
           side. I'm curious about most things.
         </p>
+
+        <div className="mt-7 flex items-center gap-7">
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-muted hover:text-ink focus-visible:text-ink focus-visible:outline-none focus-visible:underline underline-offset-4 transition-colors"
+          >
+            Resume PDF
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 10 10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-[0.85em] w-[0.85em]"
+            >
+              <path d="M2.4 7.6 7.6 2.4" />
+              <path d="M3.6 2.4h4v4" />
+            </svg>
+          </a>
+
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="space-y-14">
