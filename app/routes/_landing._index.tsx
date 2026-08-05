@@ -213,18 +213,29 @@ export default function Page() {
           <div className="space-y-6">
             {building.map((element) => (
               <Row key={element.name} label={element.label}>
-                {element.url ? (
-                  <ExternalLink
-                    href={element.url}
-                    className="text-base font-medium leading-snug"
-                  >
-                    {element.name}
-                  </ExternalLink>
-                ) : (
-                  <p className="text-base font-medium leading-snug">
-                    {element.name}
-                  </p>
-                )}
+                <div className="flex flex-wrap items-baseline gap-x-3">
+                  {element.url ? (
+                    <ExternalLink
+                      href={element.url}
+                      className="text-base font-medium leading-snug"
+                    >
+                      {element.name}
+                    </ExternalLink>
+                  ) : (
+                    <p className="text-base font-medium leading-snug">
+                      {element.name}
+                    </p>
+                  )}
+
+                  {/* Rides the name's line: a note about the project, not a
+                      field of its own. */}
+                  {element.meta && (
+                    <span className="font-mono text-[11px] text-muted">
+                      {element.meta.join(' · ')}
+                    </span>
+                  )}
+                </div>
+
                 <p className="mt-1 text-pretty text-[13px] leading-relaxed text-muted max-w-[46ch]">
                   {typeset(element.summary)}
                 </p>

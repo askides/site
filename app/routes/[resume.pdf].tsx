@@ -130,6 +130,13 @@ const styles = StyleSheet.create({
     maxWidth: 300,
   },
   linkRow: { flexDirection: 'row', alignItems: 'center' },
+  // Rides the name's line, so it reads as a note rather than a field.
+  note: {
+    fontFamily: 'IBM Plex Mono',
+    fontSize: 7.5,
+    color: MUTED,
+    marginLeft: 8,
+  },
   arrow: { marginLeft: 3, marginBottom: 1 },
 });
 
@@ -204,7 +211,12 @@ function Resume() {
           <Text style={styles.sectionTitle}>BUILDING</Text>
           {building.map((element) => (
             <Row key={element.name} label={element.label}>
-              <LinkOut src={element.url}>{element.name}</LinkOut>
+              <View style={styles.linkRow}>
+                <LinkOut src={element.url}>{element.name}</LinkOut>
+                {element.meta && (
+                  <Text style={styles.note}>{element.meta.join(' · ')}</Text>
+                )}
+              </View>
               <Text style={styles.summary}>{element.summary}</Text>
             </Row>
           ))}
