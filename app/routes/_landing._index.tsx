@@ -5,7 +5,7 @@ import { ofetch } from 'ofetch';
 import { useRef } from 'react';
 import { getArticlesList } from '~/shared/articles';
 import { createMetadata } from '~/shared/meta';
-import { building, elsewhere, work } from '~/shared/resume';
+import { building, elsewhere, profile, work } from '~/shared/resume';
 import { auth } from '~/shared/session';
 import { ThemeToggle } from '~/shared/theme';
 
@@ -35,6 +35,7 @@ const useSubscribeMutation = () => {
 export const meta = createMetadata(
   'Renato Pozzi | Nomad, Software Engineer & Polymath',
   "Travelling the world and meeting wonderful people who teach me how to live better every day. I'm 100% curious about everything.",
+  { imageUrl: '/og.png' },
 );
 
 const link =
@@ -150,12 +151,20 @@ export default function Page() {
         </p>
       )}
 
-      <header className="mb-16">
+      <header className="mb-16 after:block after:clear-both after:content-['']">
+        <img
+          src={profile.photo}
+          alt="Portrait of Renato Pozzi"
+          width={900}
+          height={1200}
+          className="float-none mb-8 h-32 w-32 rounded-sm object-cover object-[50%_38%] ring-1 ring-ink/10 sm:float-right sm:ml-10 sm:mb-4 sm:h-44 sm:w-32"
+        />
+
         <h1 className="text-[2.25rem] sm:text-[3rem] font-semibold tracking-[-0.025em] leading-none">
           Renato Pozzi
         </h1>
         <p className="mt-8 text-pretty text-[17px] leading-relaxed max-w-[46ch]">
-          Ten years building web products, mostly on the front end. Currently at{' '}
+          Ten years building web products. Currently at{' '}
           <ExternalLink href="https://toggl.com">Toggl</ExternalLink>, working
           remote, and building{' '}
           <ExternalLink href="https://zilfu.app">Zilfu</ExternalLink> on the

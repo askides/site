@@ -6,6 +6,7 @@
   "scripts": {
     "build": "remix vite:build",
     "dev": "remix vite:dev",
+    "generate:og": "tsx scripts/generate-og-image.tsx",
     "lint": "biome check",
     "start": "remix-serve ./build/server/index.js",
     "typecheck": "tsc"

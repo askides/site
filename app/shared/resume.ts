@@ -5,8 +5,10 @@ export const profile = {
   name: 'Renato Pozzi',
   role: 'Senior Frontend Engineer',
   site: 'askides.com',
+  email: 'askides@proton.me',
+  photo: '/assets/renato-pozzi-profile.jpg',
   intro:
-    "Ten years building web products, mostly on the front end. Currently at Toggl, working remote, and building Zilfu on the side. I'm curious about most things.",
+    "Ten years building web products. Currently at Toggl, working remote, and building Zilfu on the side. I'm curious about most things.",
 };
 
 type Role = {

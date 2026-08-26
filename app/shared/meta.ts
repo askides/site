@@ -6,12 +6,14 @@ interface MetadataOptions {
 export function createMetadata(
   title: string,
   description: string,
-  opts: MetadataOptions = {}
+  opts: MetadataOptions = {},
 ) {
   const baseUrl = 'https://askides.com';
-  const { canonicalPath = '/' } = opts;
+  const { canonicalPath = '/', imageUrl } = opts;
   const fullCanonicalUrl = `${baseUrl}${canonicalPath}`;
-  const fullImageUrl = `${baseUrl}/image?title=${encodeURIComponent(title)}`;
+  const fullImageUrl = imageUrl
+    ? new URL(imageUrl, baseUrl).href
+    : `${baseUrl}/image?title=${encodeURIComponent(title)}`;
 
   return [
     { title },

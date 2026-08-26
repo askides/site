@@ -1,6 +1,7 @@
 import {
   Document,
   Font,
+  Image,
   Link,
   Page,
   Path,
@@ -10,6 +11,7 @@ import {
   View,
   renderToBuffer,
 } from '@react-pdf/renderer';
+import type { LoaderFunctionArgs } from '@remix-run/node';
 import { building, elsewhere, profile, work } from '~/shared/resume';
 
 // Google Fonts serves woff2 to modern clients, which react-pdf cannot embed.
@@ -76,25 +78,47 @@ const GUTTER = 96;
 
 const styles = StyleSheet.create({
   page: {
-    paddingVertical: 56,
+    paddingVertical: 48,
     paddingHorizontal: 56,
     fontFamily: 'Instrument Sans',
     fontSize: 10,
     color: INK,
   },
+  header: { flexDirection: 'row', justifyContent: 'space-between' },
+  headerCopy: { width: 342 },
   name: { fontSize: 26, fontWeight: 600, letterSpacing: -0.6 },
-  contact: {
-    fontFamily: 'IBM Plex Mono',
-    fontSize: 8,
-    color: MUTED,
-    marginTop: 10,
-  },
   intro: { fontSize: 10.5, lineHeight: 1.6, marginTop: 14, maxWidth: 380 },
+  identity: { width: 112, alignItems: 'flex-end' },
+  portrait: {
+    width: 92,
+    height: 110,
+    objectFit: 'cover',
+    objectPosition: '50% 38%',
+  },
+  contactSection: {
+    width: 300,
+    marginTop: 20,
+  },
+  contactTitle: {
+    fontFamily: 'IBM Plex Mono',
+    fontSize: 7,
+    letterSpacing: 1.2,
+    color: MUTED,
+    marginBottom: 5,
+  },
+  contactLinks: { flexDirection: 'row' },
+  contactLink: {
+    fontFamily: 'IBM Plex Mono',
+    fontSize: 7.2,
+    color: INK,
+    textDecoration: 'none',
+    marginRight: 18,
+  },
   section: {
-    marginTop: 26,
+    marginTop: 24,
     borderTopWidth: 1,
     borderTopColor: RULE,
-    paddingTop: 16,
+    paddingTop: 14,
   },
   sectionTitle: {
     fontFamily: 'IBM Plex Mono',
@@ -103,7 +127,7 @@ const styles = StyleSheet.create({
     color: MUTED,
     marginBottom: 14,
   },
-  row: { flexDirection: 'row', marginBottom: 12 },
+  row: { flexDirection: 'row', marginBottom: 10 },
   label: {
     fontFamily: 'IBM Plex Mono',
     fontSize: 8,
@@ -180,19 +204,41 @@ function Row({
   );
 }
 
-function Resume() {
+function Resume({ photoSrc }: { photoSrc: string }) {
   return (
     <Document
-      title={`${profile.name} — Resume`}
+      title={`${profile.name} - Resume`}
       author={profile.name}
       subject={profile.role}
     >
       <Page size="A4" style={styles.page}>
-        <Text style={styles.name}>{profile.name}</Text>
-        <Text style={styles.contact}>
-          {profile.role} · {profile.site}
-        </Text>
-        <Text style={styles.intro}>{profile.intro}</Text>
+        <View style={styles.header}>
+          <View style={styles.headerCopy}>
+            <Text style={styles.name}>{profile.name}</Text>
+            <Text style={styles.intro}>{profile.intro}</Text>
+            <View style={styles.contactSection}>
+              <Text style={styles.contactTitle}>CONTACT</Text>
+              <View style={styles.contactLinks}>
+                <Link
+                  src={`mailto:${profile.email}`}
+                  style={styles.contactLink}
+                >
+                  {profile.email}
+                </Link>
+                <Link
+                  src={`https://${profile.site}`}
+                  style={styles.contactLink}
+                >
+                  {profile.site}
+                </Link>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.identity}>
+            <Image src={photoSrc} style={styles.portrait} />
+          </View>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>WORK</Text>
@@ -235,10 +281,11 @@ function Resume() {
   );
 }
 
-export async function loader() {
+export async function loader({ request }: LoaderFunctionArgs) {
   await registerFonts();
 
-  const body = await renderToBuffer(<Resume />);
+  const photoSrc = new URL(profile.photo, request.url).href;
+  const body = await renderToBuffer(<Resume photoSrc={photoSrc} />);
 
   return new Response(body, {
     headers: {
