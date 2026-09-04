@@ -172,7 +172,7 @@ function Recommendation({
           alt=""
           width={40}
           height={40}
-          className="h-9 w-9 rounded-full object-cover ring-1 ring-ink/10"
+          className="h-9 w-9 rounded-sm object-cover ring-1 ring-ink/10"
         />
 
         <div className="min-w-0">
@@ -315,7 +315,7 @@ export default function Page() {
                   alt=""
                   width={40}
                   height={40}
-                  className="h-8 w-8 rounded-full border-2 border-paper object-cover ring-1 ring-ink/10"
+                  className="h-8 w-8 rounded-sm border-2 border-paper object-cover ring-1 ring-ink/10"
                 />
               ))}
             </div>
