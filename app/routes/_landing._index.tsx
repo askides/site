@@ -49,6 +49,7 @@ const recommendations = [
     role: 'Senior PM at Toggl',
     date: 'Aug 26, 2026',
     relationship: 'Worked with me on the same team',
+    preview: 'Strong drive for quality, with the courage to push back.',
     teaser:
       "I've really enjoyed working with Renny. He's an engineer who combines a strong drive for quality with genuine willingness to learn and take on new challenges.",
     body: [
@@ -63,6 +64,7 @@ const recommendations = [
     role: 'B2B Product Manager',
     date: 'Aug 1, 2026',
     relationship: 'Managed me directly',
+    preview: 'Give him the big, messy work. He will get it done.',
     teaser:
       'Renato worked with me at Toggl and was one of my top engineers. He is the kind of professional that I could go to when something was big, messy and that most people would struggle to get finished.. And he would get it done.',
     body: [
@@ -163,61 +165,44 @@ function Recommendation({
   recommendation,
 }: { recommendation: (typeof recommendations)[number] }) {
   return (
-    <details className="group/recommendation border-t border-rule first:border-t-0 open:bg-ink/[0.018]">
-      <summary className="list-none cursor-pointer px-5 py-5 marker:hidden transition-colors hover:bg-ink/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/30 sm:px-6 sm:py-6 [&::-webkit-details-marker]:hidden">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-5">
-          <div>
-            <blockquote className="max-w-[48ch] text-pretty text-[15px] leading-relaxed sm:text-base">
-              “{recommendation.teaser}”
-            </blockquote>
-            <div className="mt-4 flex items-center gap-3">
-              <img
-                src={recommendation.photo}
-                alt=""
-                width={40}
-                height={40}
-                className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-ink/10"
-              />
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
-                <span className="font-medium text-ink">
-                  {recommendation.author}
-                </span>
-                <span aria-hidden="true" className="text-muted/50">
-                  •
-                </span>
-                <span>{recommendation.relationship}</span>
-              </p>
-            </div>
-          </div>
+    <details className="group/recommendation">
+      <summary className="-mx-2 grid cursor-pointer list-none grid-cols-[2.25rem_1fr_auto] items-center gap-3 rounded-sm px-2 py-2 marker:hidden transition-colors hover:bg-paper/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 [&::-webkit-details-marker]:hidden">
+        <img
+          src={recommendation.photo}
+          alt=""
+          width={40}
+          height={40}
+          className="h-9 w-9 rounded-full object-cover ring-1 ring-ink/10"
+        />
 
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors group-hover/recommendation:border-ink/35">
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.25"
-              strokeLinecap="round"
-              className="h-4 w-4 transition-transform duration-300 motion-reduce:transition-none group-open/recommendation:rotate-45"
-            >
-              <path d="M8 3.25v9.5M3.25 8h9.5" />
-            </svg>
-            <span className="sr-only">
-              Read the full recommendation from {recommendation.author}
+        <div className="min-w-0">
+          <p className="flex flex-wrap items-baseline gap-x-2 text-[13px] leading-snug">
+            <span className="font-medium">{recommendation.author}</span>
+            <span className="text-[11px] text-muted">
+              {recommendation.relationship}
             </span>
-          </span>
+          </p>
+          <p className="mt-0.5 truncate text-[13px] text-ink/65">
+            {recommendation.preview}
+          </p>
         </div>
+
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted transition-colors group-hover/recommendation:text-ink">
+          <span className="group-open/recommendation:hidden">Read</span>
+          <span className="hidden group-open/recommendation:inline">Close</span>
+        </span>
       </summary>
 
-      <div className="recommendation-body px-5 pb-6 sm:px-6 sm:pb-7">
-        <blockquote className="border-l border-ink/15 pl-4 sm:pl-5">
-          <div className="space-y-4 text-pretty text-[14px] leading-relaxed text-ink/75">
+      <div className="recommendation-body pb-4 pl-12 pr-1 pt-2">
+        <blockquote>
+          <div className="space-y-3 text-pretty text-[13px] leading-relaxed text-ink/70">
+            <p>{recommendation.teaser}</p>
             {recommendation.body.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
 
-          <footer className="mt-5 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
+          <footer className="mt-4 font-mono text-[9px] uppercase tracking-[0.1em] text-muted">
             <ExternalLink href={recommendation.authorUrl}>
               {recommendation.author}
             </ExternalLink>
@@ -310,18 +295,15 @@ export default function Page() {
       <div className="space-y-14">
         <section
           aria-labelledby="recommendations-heading"
-          className="overflow-hidden rounded-sm border border-ink/15"
+          className="rounded-sm bg-ink/[0.035] px-4 py-4 sm:px-5"
         >
-          <div className="flex items-start justify-between gap-6 px-5 py-5 sm:px-6 sm:py-6">
+          <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted">
-                Notes from teammates
-              </p>
               <h2
                 id="recommendations-heading"
-                className="mt-2 max-w-[28ch] text-pretty text-xl font-medium leading-snug tracking-[-0.01em]"
+                className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted"
               >
-                The people beside the work say it best.
+                What teammates say
               </h2>
             </div>
 
@@ -333,13 +315,13 @@ export default function Page() {
                   alt=""
                   width={40}
                   height={40}
-                  className="h-9 w-9 rounded-full border-2 border-paper object-cover ring-1 ring-ink/10"
+                  className="h-8 w-8 rounded-full border-2 border-paper object-cover ring-1 ring-ink/10"
                 />
               ))}
             </div>
           </div>
 
-          <div className="border-t border-rule">
+          <div className="mt-2 space-y-1">
             {recommendations.map((recommendation) => (
               <Recommendation
                 key={recommendation.author}
@@ -352,9 +334,9 @@ export default function Page() {
             href="https://www.linkedin.com/in/askides/details/recommendations/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between gap-4 border-t border-rule bg-ink/[0.025] px-5 py-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink/30 sm:px-6"
+            className="mt-3 inline-flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-none focus-visible:underline underline-offset-4"
           >
-            <span>Verified on LinkedIn</span>
+            <span>View on LinkedIn</span>
             <svg
               aria-hidden="true"
               viewBox="0 0 10 10"
