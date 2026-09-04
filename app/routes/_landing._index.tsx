@@ -166,7 +166,7 @@ function Recommendation({
 }: { recommendation: (typeof recommendations)[number] }) {
   return (
     <details className="group/recommendation">
-      <summary className="-mx-2 grid cursor-pointer list-none grid-cols-[2.25rem_1fr_auto] items-center gap-3 rounded-sm px-2 py-2 marker:hidden transition-colors hover:bg-paper/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 [&::-webkit-details-marker]:hidden">
+      <summary className="grid cursor-pointer list-none grid-cols-[2.25rem_1fr_auto] items-center gap-3 py-2 marker:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 [&::-webkit-details-marker]:hidden">
         <img
           src={recommendation.photo}
           alt=""
@@ -189,7 +189,7 @@ function Recommendation({
           </p>
         </div>
 
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted transition-colors group-hover/recommendation:text-ink">
+        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
           <span className="group-open/recommendation:hidden">Read</span>
           <span className="hidden group-open/recommendation:inline">Close</span>
         </span>
