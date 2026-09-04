@@ -182,8 +182,10 @@ function Recommendation({
               {recommendation.relationship}
             </span>
           </p>
-          <p className="mt-0.5 truncate text-[13px] text-ink/65">
+          <p className="mt-0.5 truncate text-[13px] italic text-ink/70">
+            <span aria-hidden="true">“</span>
             {recommendation.preview}
+            <span aria-hidden="true">”</span>
           </p>
         </div>
 
@@ -295,8 +297,15 @@ export default function Page() {
       <div className="space-y-14">
         <section
           aria-labelledby="recommendations-heading"
-          className="rounded-sm bg-ink/[0.035] px-4 py-4 sm:px-5"
+          className="relative isolate overflow-hidden rounded-sm bg-gradient-to-br from-ink/[0.075] via-ink/[0.045] to-ink/[0.02] px-4 py-4 sm:px-5"
         >
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-2 -top-8 select-none font-serif text-[8rem] leading-none text-ink/[0.06]"
+          >
+            “
+          </span>
+
           <h2 id="recommendations-heading" className="sr-only">
             Recommendations
           </h2>
