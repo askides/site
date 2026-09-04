@@ -189,7 +189,7 @@ function Recommendation({
           </p>
         </div>
 
-        <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
+        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink/75 underline-offset-4 group-hover/recommendation:text-ink group-hover/recommendation:underline">
           <span className="group-open/recommendation:hidden">Read</span>
           <span className="hidden group-open/recommendation:inline">Close</span>
         </span>
