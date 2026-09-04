@@ -297,31 +297,11 @@ export default function Page() {
           aria-labelledby="recommendations-heading"
           className="rounded-sm bg-ink/[0.035] px-4 py-4 sm:px-5"
         >
-          <div className="flex items-center justify-between gap-6">
-            <div>
-              <h2
-                id="recommendations-heading"
-                className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted"
-              >
-                What teammates say
-              </h2>
-            </div>
+          <h2 id="recommendations-heading" className="sr-only">
+            Recommendations
+          </h2>
 
-            <div aria-hidden="true" className="mt-0.5 flex -space-x-2">
-              {recommendations.map((recommendation) => (
-                <img
-                  key={recommendation.author}
-                  src={recommendation.photo}
-                  alt=""
-                  width={40}
-                  height={40}
-                  className="h-8 w-8 rounded-sm border-2 border-paper object-cover ring-1 ring-ink/10"
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-2 space-y-1">
+          <div className="space-y-1">
             {recommendations.map((recommendation) => (
               <Recommendation
                 key={recommendation.author}
